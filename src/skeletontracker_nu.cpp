@@ -2,6 +2,9 @@
 // Jake Ware and Jarvis Schultz
 // Winter 2011
 
+// Heartbeat message added by Adam Barber
+// March 2014
+
 
 //---------------------------------------------------------------------------
 // Notes
@@ -21,6 +24,7 @@
 #include <kdl/frames.hpp>
 
 #include <skeletonmsgs_nu/Skeletons.h>
+#include <std_msgs/Empty.h>
 
 #include <XnOpenNI.h>
 #include <XnCodecIDs.h>
@@ -147,6 +151,7 @@ private:
     ros::NodeHandle nh_;
     ros::Publisher pmap_pub;
     ros::Publisher skel_pub;
+    ros::Publisher heartbeat_pub;
     ros::Time tstamp, tstamp_last;
     tf::TransformBroadcaster br;
     ros::Timer timer;
@@ -156,6 +161,7 @@ public:
 	
 	// define ros publishers for skels
 	skel_pub = nh_.advertise<skeletonmsgs_nu::Skeletons> ("skeletons", 100);
+	heartbeat_pub = nh_.advertise<std_msgs::Empty> ("tracker_hearbeat",100);
 	timer = nh_.createTimer(ros::Duration(0.01), &TrackerClass::timerCallback, this);
 
 	ROS_INFO("Starting Tracker...\n");
@@ -285,6 +291,10 @@ public:
 		skels.header.frame_id="camera_depth_frame";
 		skel_pub.publish(skels);
 	    }
+	    //Publish hearbeat here
+	    //Shouldn't matter how many users we have
+	    std_msgs::Empty hrtbt;
+	    hearbeat_pub.publish(hrtbt)
 	}
 
 
