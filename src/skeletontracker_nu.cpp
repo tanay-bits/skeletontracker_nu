@@ -26,6 +26,7 @@
 #include <skeletonmsgs_nu/Skeletons.h>
 #include <std_msgs/Empty.h>
 
+
 #include <XnOpenNI.h>
 #include <XnCodecIDs.h>
 #include <XnCppWrapper.h>
@@ -284,12 +285,12 @@ public:
 	    }
   
 	    ROS_DEBUG("users_count: %i", users_count);
-  
 	    if(users_count > 0)
 	    {
 		skels.header.stamp=tstamp;
 		skels.header.frame_id="camera_depth_frame";
 		skel_pub.publish(skels);
+		// ros::spinOnce();
 	    }
 	    //Publish hearbeat here
 	    //Shouldn't matter how many users we have
