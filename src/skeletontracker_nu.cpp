@@ -162,7 +162,7 @@ public:
 	
 	// define ros publishers for skels
 	skel_pub = nh_.advertise<skeletonmsgs_nu::Skeletons> ("skeletons", 100);
-	heartbeat_pub = nh_.advertise<std_msgs::Empty> ("tracker_hearbeat",100);
+	heartbeat_pub = nh_.advertise<std_msgs::Empty> ("tracker_heartbeat",100);
 	timer = nh_.createTimer(ros::Duration(0.01), &TrackerClass::timerCallback, this);
 
 	ROS_INFO("Starting Tracker...\n");
@@ -292,10 +292,7 @@ public:
 		skel_pub.publish(skels);
 		// ros::spinOnce();
 	    }
-	    //Publish hearbeat here
-	    //Shouldn't matter how many users we have
-	    std_msgs::Empty hrtbt;
-	    hearbeat_pub.publish(hrtbt)
+
 	}
 
 
@@ -303,6 +300,10 @@ public:
 	{
 	    ROS_DEBUG("timerCallback triggered");
 	    g_Context.WaitAndUpdateAll();  // sits and waits for new set of user
+	    //Publish heartbeat here
+	    //Shouldn't matter how many users we have
+	    std_msgs::Empty hrtbt;
+	    heartbeat_pub.publish(hrtbt);
 	    // data from kinect (30 Hz)
 	    publishData();  // everything important happens in this function
 	}
