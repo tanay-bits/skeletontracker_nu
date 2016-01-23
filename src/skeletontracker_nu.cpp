@@ -36,6 +36,8 @@
 	return nRetVal;							\
     }
 
+#define DEFAULT_FRAME "openni_depth_optical_frame"
+
 //---------------------------------------------------------------------------
 // Global variables
 //---------------------------------------------------------------------------
@@ -150,13 +152,20 @@ private:
     ros::Time tstamp, tstamp_last;
     tf::TransformBroadcaster br;
     ros::Timer timer;
+	std::string frame_id;
 
 public:
-    TrackerClass(){
+    TrackerClass()
+		: frame_id(DEFAULT_FRAME)
+		{
 	
 	// define ros publishers for skels
 	skel_pub = nh_.advertise<skeletonmsgs_nu::Skeletons> ("skeletons", 100);
 	timer = nh_.createTimer(ros::Duration(0.01), &TrackerClass::timerCallback, this);
+
+	// get frame id:
+	ros::NodeHandle pnh("~");
+	pnh.getParam("camera_frame_id", frame_id);
 
 	ROS_INFO("Starting Tracker...\n");
     }
@@ -190,10 +199,10 @@ public:
 	    m[7] = -m[7];
 	    m[8] = -m[8];
     
-	    KDL::Rotation rotation(m[0], m[1], m[2],
-				   m[3], m[4], m[5],
-				   m[6], m[7], m[8]);
-
+        KDL::Rotation rotation(m[0], m[1], m[2],
+                               m[3], m[4], m[5],
+                               m[6], m[7], m[8]);
+		
 	    double qx, qy, qz, qw;
 	    rotation.GetQuaternion(qx, qy, qz, qw);
 
@@ -209,7 +218,7 @@ public:
 	    br.sendTransform(tf::StampedTransform(
 				 transform,
 				 t,
-				 "camera_depth_optical_frame",
+				 frame_id,
 				 frame.str()));
 	    
 	    j.transform.translation.x = transform.getOrigin().x();
@@ -281,9 +290,8 @@ public:
 	    if(users_count > 0)
 	    {
 		skels.header.stamp=tstamp;
-		skels.header.frame_id="camera_depth_frame";
+		skels.header.frame_id = frame_id;
 		skel_pub.publish(skels);
-		// ros::spinOnce();
 	    }
 	}
 
@@ -305,8 +313,6 @@ public:
 
 int main(int argc, char **argv) 
 {
-    sleep(5);  // delay for openni_camera to start
-    
     // startup node
     ros::init(argc, argv, "skeletontracker_nu");
     ros::NodeHandle node;
@@ -367,8 +373,7 @@ int main(int argc, char **argv)
 	    GetCalibrationPose(g_strPose);
     }
 
-    g_UserGenerator.GetSkeletonCap().SetSkeletonProfile(
-	XN_SKEL_PROFILE_ALL);  // needs comment
+    g_UserGenerator.GetSkeletonCap().SetSkeletonProfile(XN_SKEL_PROFILE_ALL);
 
     nRetVal = g_Context.StartGeneratingAll();
     CHECK_RC(nRetVal, "StartGenerating");
