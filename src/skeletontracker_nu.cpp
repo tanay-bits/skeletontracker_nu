@@ -36,7 +36,7 @@
 	return nRetVal;							\
     }
 
-#define DEFAULT_FRAME "openni_depth_optical_frame"
+#define DEFAULT_FRAME "camera_depth_optical_frame"
 
 //---------------------------------------------------------------------------
 // Global variables
