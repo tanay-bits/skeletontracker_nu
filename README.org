@@ -1,0 +1,54 @@
+*Jarvis Schultz*
+*January 2016*
+*skeletontracker_nu ROS package*
+
+
+* Basic Info
+This ROS package provides skeleton tracking information based on the NITE
+skeleton tracking library. It is very similar to [[http://wiki.ros.org/openni_tracker][openni_tracker]]. The primary
+differences are:
+1. This package publishes the transforms provided by NITE as custom messages
+   defined in the [[https://github.com/NxRLab/skeletonmsgs_nu][skeletonmsgs_nu]] package. It also provides similar =/tf=
+   information to =openni_tracker=.
+2. By default, this package mirrors the data coming from the depth camera about
+   the vertical axis. The benefit of this choice is that the left/right labels
+   assigned by NITE correspond to the tracked person's left/right. It may be
+   very important to know that the data is mirrored if using something like [[http://pointclouds.org/][PCL]].
+
+* Coordinate Systems
+The data provided by the tracker will provide transforms from a frame on the
+depth camera to a set of frames on the user. This data is published as
+translations and quaternions. An installation of NITE contains a document called
+/NITE Algorithms.pdf/ that contains the details on which transforms are provided
+by the library.
+  
+
+* Debugging Tips
+Sometimes it can be difficult to get the skeleton tracking and/or the drivers
+working with a particular computer/device combo. Check out [[http://answers.ros.org/question/109411/asus-xtion-problems-with-ubuntu-1204-running-ros-fuerte/#109831][this answer]] for my
+standard techniques for getting both generations of ASUS Xtion PRO LIVE devices
+and Kinects working with a single set of drivers and skeleton tracking SDKs.
+
+If you are having trouble getting either the skeleton tracker (it sometimes
+throws a segmentation fault while starting) or the drivers to start, check out
+the following debugging steps.
+
+1. Sometimes the drivers don't shutdown correctly, then they can be difficult to
+   restart. Sometimes the =XnSensorServer= process is still running. Check it
+   out with =ps aux |grep Xn=. You can kill it with something like =killall
+   XnSensorServer=.
+2. If you are keeping =roscore= running between successive runs. I've seen
+   instances where the =camera_nodelet_manager= node doesn't properly get
+   unregistered. This shouldn't cause a problem, but if you suspect it is, try
+   running =rosnode cleanup=.
+3. If I can't get either the drivers or the tracker to start, then I try the
+   following procedure:
+   - Kill all nodes
+   - Unplug the device
+   - Run =sudo service udev reload= to reload the =udev= kernel module
+   - Re-plug the device and try again
+
+
+
+
+
