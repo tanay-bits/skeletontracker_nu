@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import rospy
 import tf
 import baxter_interface
@@ -21,14 +20,11 @@ from baxter_core_msgs.srv import (
 from sensor_msgs.msg import JointState
 from baxter_interface import CHECK_VERSION
 
+
 def ik_solve(limb,p,q):
-    global right
-    global left
+    global right, left, iksvcR
     
-    ns = "ExternalTools/" + limb + "/PositionKinematicsNode/IKService"
-    iksvc = rospy.ServiceProxy(ns, SolvePositionIK)
-    ikreq = SolvePositionIKRequest()
-    
+    ikreq = SolvePositionIKRequest()    # service request object
     hdr = Header(stamp=rospy.Time.now(), frame_id='base')
     poses = {
         'left': PoseStamped(
@@ -38,9 +34,7 @@ def ik_solve(limb,p,q):
             header=hdr,
             pose=Pose(position=p,orientation=q))
     }
-        
-    right = baxter_interface.Limb('right')
-   
+           
     '''
     seeds={
          'right': JointState(
@@ -64,13 +58,11 @@ def ik_solve(limb,p,q):
              }            
     '''
  
-
     ikreq.pose_stamp.append(poses[limb])
     
     try:
-        rospy.wait_for_service(ns, 5.0)
-        resp = iksvc(ikreq)
-            
+        # rospy.wait_for_service(ns, 3.0)
+        resp = iksvcR(ikreq)           
     except (rospy.ServiceException, rospy.ROSException), e:
         rospy.logerr("Service call failed: %s" % (e,))
         return 1
@@ -129,15 +121,13 @@ def ik_solve(limb,p,q):
             
             ikreq.seed_angles = [js]
             
-            resp = iksvc(ikreq)
+            resp = iksvcR(ikreq)
 
         return right.joint_angles()
 
 
 
 def callback(message):
-    global left
-    global right
     global tflistener   
 
     number_users = len(message.skeletons)
@@ -161,24 +151,23 @@ def callback(message):
         pass
 
 
-        
-        
-
-
 def main():
-    global left
-    global right
-    global tflistener
+    global left, right, tflistener, iksvcR
 
+    # initialize node, tf listener, baxter limbs and ikservice
     rospy.init_node('baxnode')
     tflistener = tf.TransformListener()
     rs = baxter_interface.RobotEnable(CHECK_VERSION)
     init_state = rs.state().enabled
     right = baxter_interface.Limb('right')
-    right.set_joint_position_speed(1.0)
+    right.set_joint_position_speed(1.0)     # range 0-1
     left = baxter_interface.Limb('left')
-    left.set_joint_position_speed(1.0)
+    left.set_joint_position_speed(1.0)      # range 0-1
+    nsR = "ExternalTools/right/PositionKinematicsNode/IKService"
+    iksvcR = rospy.ServiceProxy(nsR, SolvePositionIK)
+    rospy.sleep(2.)     # sleep for 2 secs to ensure service is initialized
 
+    # subscribe to /skeletons topic and perform callback
     rospy.Subscriber("/skeletons", Skeletons, callback)
     rospy.spin()
 
